@@ -8,13 +8,13 @@
     "start": "next start -p 3000"
   },
   "dependencies": {
-    "file-saver": "^2.0.5",         // for client-side ZIP downloads
-    "jszip": "^3.10.1",             // for generating ZIP files
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
     "next": "13.4.10",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "node-fetch": "^3.3.2",         // for server-side fetching in API routes
-    "node-html-parser": "^6.1.7"    // parse HTML on server side
+    "node-fetch": "^3.3.2",
+    "node-html-parser": "^6.1.7"
   },
   "type": "module"
 }
