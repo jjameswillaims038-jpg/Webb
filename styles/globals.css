@@ -144,3 +144,60 @@ h2 {
   from{text-shadow:0 0 5px #ff007f;}
   to{text-shadow:0 0 25px #ff007f;}
 }
+.unlock-wrapper {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center,
+             rgba(255,0,100,0.1) 0%, rgba(0,0,0,0.95) 100%);
+  padding: 2rem;
+}
+
+.unlock-gate {
+  text-align: center;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 20px rgba(255,0,80,0.3);
+}
+
+.lock-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 4rem;
+  color: #ff0050;
+  margin-bottom: 1.5rem;
+}
+
+.lock-icon .timer {
+  font-size: 1.4rem;
+  color: #fff;
+  margin-top: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.unlock-btn {
+  background: linear-gradient(45deg, #ff0050, #ff7a00);
+  border: none;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.unlock-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px #ff0050;
+}
+
+.unlock-tip {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.7);
+}
