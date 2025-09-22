@@ -15,7 +15,7 @@ export default function Copier() {
       const res = await fetch("/api/copy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url }),
       });
 
       if (!res.ok) throw new Error("Failed to fetch site");
@@ -37,25 +37,27 @@ export default function Copier() {
     <>
       <Navbar />
       <UnlockWrapper>
-        <main style={{ maxWidth: 1100, margin: "20px auto", padding: 20 }}>
-          <h1 style={{ color: "var(--accent)" }}>👁️ NightForge Web Copier</h1>
-          <p style={{ color: "var(--muted)" }}>
+        <main className="container section">
+          <h1 className="section-title">👁️ NightForge Web Copier</h1>
+          <p className="section-subtitle">
             Paste a public URL to download a full ZIP of the website (HTML + CSS + JS + assets).
           </p>
 
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="form-row">
             <input
-              style={{ flex: 1 }}
+              className="input"
               placeholder="https://example.com"
               value={url}
-              onChange={e => setUrl(e.target.value)}
+              onChange={(e) => setUrl(e.target.value)}
             />
-            <button className="btn-primary" onClick={startCopy}>
+            <button className="btn" onClick={startCopy}>
               {stage === "fetching" ? "⏳ Copying..." : "⚡ Copy Website"}
             </button>
           </div>
 
-          {stage === "done" && <p style={{ color: "var(--neon)", marginTop: 12 }}>✅ ZIP download started!</p>}
+          {stage === "done" && (
+            <p className="success-msg">✅ ZIP download!</p>
+          )}
         </main>
       </UnlockWrapper>
       <Footer />
