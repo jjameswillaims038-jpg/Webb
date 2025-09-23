@@ -1,145 +1,174 @@
-/* ====== GLOBAL NIGHTFORGE THEME ====== */
 :root {
-  --bg: #050507;
-  --bg-alt: #0c0c12;
-  --card: #101018;
+  --bg: #07070a;
+  --panel: #0c0c12;
+  --text: #e9f7ee;
+  --muted: #999;
   --accent: #ff004c;
-  --neon: #00ffe7;
-  --muted: #9a9aaf;
-  --text: #f0f0f5;
+  --neon: #00ff99;
 }
 
-html, body {
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', 'Segoe UI', sans-serif;
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
 }
 
-main {
+/* NAVBAR */
+.navbar {
+  background: var(--panel);
+  padding: 14px 20px;
+  border-bottom: 1px solid #111;
+}
+.nav-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-
-/* ====== HEADINGS ====== */
-h1, h2, h3, h4 {
-  margin: 0 0 12px;
+.navbar .logo {
   font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--neon);
+  text-decoration: none;
 }
-h1 { font-size: 2.2rem; color: var(--accent); }
-h2 { font-size: 1.6rem; color: var(--neon); }
-h3 { font-size: 1.2rem; color: var(--accent); }
-p { margin: 0 0 10px; color: var(--muted); }
+.navbar .links a {
+  margin-left: 16px;
+  text-decoration: none;
+  color: var(--text);
+}
+.navbar .links a:hover {
+  color: var(--accent);
+}
 
-/* ====== BUTTONS ====== */
-.cta-btn, .btn-primary {
+/* HERO */
+.hero {
+  padding: 80px 20px;
+  text-align: center;
+  background: linear-gradient(180deg, #0f0f18, #050507);
+}
+.hero h1 {
+  font-size: 3rem;
+  color: var(--accent);
+}
+.hero p {
+  margin: 12px 0 20px;
+  color: var(--muted);
+}
+.cta-btn {
   display: inline-block;
   background: var(--accent);
   color: #fff;
-  padding: 12px 20px;
-  border-radius: 8px;
-  text-decoration: none;
+  padding: 12px 24px;
+  border-radius: 6px;
   font-weight: bold;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  transition: background 0.2s;
 }
-.cta-btn:hover, .btn-primary:hover {
-  background: #ff336f;
-  transform: translateY(-2px);
-  box-shadow: 0 0 12px var(--accent);
+.cta-btn:hover {
+  background: #e60045;
 }
 
-/* ====== CARDS / PANELS ====== */
+/* FEATURES + ARSENAL */
+.features, .arsenal {
+  max-width: 1100px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+.features h2, .arsenal h2 {
+  color: var(--neon);
+  margin-bottom: 20px;
+}
+.grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
 .card {
-  background: var(--bg-alt);
-  border: 1px solid #111;
-  border-radius: 10px;
+  background: var(--panel);
   padding: 20px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+  border: 1px solid #111;
+  transition: transform 0.2s;
+  text-decoration: none;
+  color: var(--text);
 }
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 0 12px rgba(255, 0, 76, 0.4);
-}
-.card h3 { margin-bottom: 8px; color: var(--accent); }
-.card p { color: var(--muted); }
-
-/* ====== GRID SYSTEM ====== */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-@media (min-width: 700px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 1000px) {
-  .grid { grid-template-columns: repeat(3, 1fr); }
-  .arsenal .grid { grid-template-columns: repeat(4, 1fr); }
-}
-
-/* ====== FORMS ====== */
-input, select, textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #222;
-  background: var(--card);
-  color: var(--text);
-  margin-top: 6px;
-}
-input:focus, select:focus, textarea:focus {
-  outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
+}
+.card h3 {
+  margin-bottom: 8px;
+  color: var(--accent);
 }
 
-/* ====== CODE BLOCKS ====== */
-pre {
-  background: var(--card);
-  padding: 12px;
-  border-radius: 8px;
-  overflow-x: auto;
-  font-family: "Fira Code", monospace;
-  font-size: 0.9rem;
-  color: #cfe;
-}
-
-/* ====== SECTIONS ====== */
-section {
-  margin-bottom: 60px;
+/* QUICK START */
+.quickstart {
+  background: #0b0b10;
+  padding: 60px 20px;
   text-align: center;
 }
+.quickstart h2 {
+  margin-bottom: 30px;
+  color: var(--neon);
+}
 .steps {
-  display: grid;
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 .step {
-  background: var(--bg-alt);
-  border: 1px solid #111;
-  padding: 16px;
+  background: var(--panel);
+  padding: 20px;
   border-radius: 8px;
-  text-align: left;
+  width: 220px;
 }
 .step span {
   display: inline-block;
   background: var(--accent);
-  color: #000;
-  font-weight: bold;
-  padding: 4px 10px;
+  color: #fff;
   border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  font-weight: bold;
   margin-bottom: 8px;
 }
 
-/* ====== CTA SECTIONS ====== */
+/* CTA */
 .cta {
-  background: linear-gradient(180deg, #0f0f18, #050507);
-  padding: 40px 20px;
-  border-radius: 12px;
+  padding: 60px 20px;
   text-align: center;
+}
+.cta h2 {
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+/* FOOTER */
+footer {
+  margin-top: 40px;
+  padding: 20px;
+  background: #0c0c12;
+  border-top: 1px solid #111;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+footer a {
+  color: var(--neon);
+  text-decoration: none;
+  font-weight: 600;
+}
+footer a:hover {
+  text-decoration: underline;
 }
