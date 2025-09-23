@@ -1,43 +1,76 @@
 import { useState, useEffect, useRef } from "react";
+import JSZip from "jszip";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import UnlockWrapper from "../components/UnlockWrapper";
-import JSZip from "jszip";
 
 export default function Builder() {
-  const [step, setStep] = useState(1);
   const [siteTitle, setSiteTitle] = useState("NightForge Pro");
   const [tagline, setTagline] = useState("Forged with precision by Mr Dev");
   const [about, setAbout] = useState(
-    "NightForge helps you spin up a modern, responsive website in minutes — optimized for speed, beauty, and deployment."
+    "NightForge builds modern, responsive websites in minutes — optimized for speed, style, and deployment."
   );
-  const [features, setFeatures] = useState([
-    "⚡ Lightning Fast",
-    "🎨 Sleek Dark Theme",
-    "🚀 Ready to Deploy",
-  ]);
+  const [features, setFeatures] = useState(["Fast", "Dark theme", "Deploy-ready"]);
   const [navLinks, setNavLinks] = useState([
     { label: "Home", href: "#" },
     { label: "About", href: "#about" },
     { label: "Features", href: "#features" },
   ]);
   const [logoDataUrl, setLogoDataUrl] = useState(null);
-  const [previewHTML, setPreviewHTML] = useState("");
+
+  const [sitePrompt, setSitePrompt] = useState(
+    "Build a professional dark landing page with hero, features, about, and footer."
+  );
+  const [genHtml, setGenHtml] = useState("");
+  const [genCss, setGenCss] = useState("");
+  const [assets, setAssets] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const iframeRef = useRef(null);
+  const [previewHTML, setPreviewHTML] = useState("");
 
   useEffect(() => {
-    buildPreview();
+    if (genHtml) {
+      writePreview(genHtml, genCss);
+    } else {
+      writePreview(buildFallbackHtml(), null);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteTitle, tagline, about, features, navLinks, logoDataUrl]);
+  }, [genHtml, genCss, siteTitle, tagline, about, features, navLinks, logoDataUrl]);
 
-  function buildPreview() {
-    const featuresHtml = features.map((f) => `<div class="feature-card">${f}</div>`).join("");
-    const navHtml = navLinks.map((l) => `<a href="${l.href}">${l.label}</a>`).join("");
+  function writePreview(html, css) {
+    let final = html;
+    if (css) {
+      if (!/<\/head>/i.test(final)) {
+        final = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body>${final}</body></html>`;
+      } else {
+        final = final.replace(/<\/head>/i, `<style>${css}</style></head>`);
+      }
+    }
+    setPreviewHTML(final);
+    if (iframeRef.current) {
+      try {
+        const doc = iframeRef.current.contentWindow.document;
+        doc.open();
+        doc.write(final);
+        doc.close();
+      } catch (e) {
+        console.error("Preview write failed", e);
+      }
+    }
+  }
+
+  function buildFallbackHtml() {
+    const featuresHtml = features.map((f) => `<li>${escapeHtml(f)}</li>`).join("");
+    const navHtml = navLinks
+      .map((l) => `<a href="${escapeHtml(l.href)}">${escapeHtml(l.label)}</a>`)
+      .join(" ");
     const logoTag = logoDataUrl
       ? `<img src="logo.png" class="site-logo" alt="logo">`
       : `<div class="site-logo-placeholder">NF</div>`;
-    const html = `<!doctype html>
-<html lang="en">
+
+    return `<!doctype html>
+<html>
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>${escapeHtml(siteTitle)}</title>
@@ -50,42 +83,28 @@ export default function Builder() {
       <nav class="site-nav">${navHtml}</nav>
     </div>
   </header>
-
   <section class="site-hero">
     <h1>${escapeHtml(siteTitle)}</h1>
     <p class="tag">${escapeHtml(tagline)}</p>
-    <a href="#about" class="btn-cta">Learn More</a>
   </section>
-
   <main>
     <section id="about" class="site-section">
       <h2>About</h2>
       <p>${escapeHtml(about)}</p>
     </section>
-
     <section id="features" class="site-section">
       <h2>Features</h2>
-      <div class="features-grid">${featuresHtml}</div>
+      <ul>${featuresHtml}</ul>
     </section>
   </main>
-
-  <footer class="site-footer">
-    <p>Generated with ❤️ by Mr Dev — NightForge</p>
-  </footer>
+  <footer class="site-footer">Generated with ❤️ by NightForge</footer>
 </body>
 </html>`;
-    setPreviewHTML(html);
-
-    if (iframeRef.current) {
-      const doc = iframeRef.current.contentWindow.document;
-      doc.open();
-      doc.write(html);
-      doc.close();
-    }
   }
 
   function escapeHtml(s) {
-    return (s || "").toString()
+    return (s || "")
+      .toString()
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
@@ -100,115 +119,71 @@ export default function Builder() {
     reader.readAsDataURL(f);
   };
 
+  async function generateSite() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: "Website Builder",
+          input: JSON.stringify({ siteTitle, tagline, about, features, navLinks, sitePrompt }),
+          instructions:
+            "Return JSON with keys: html, css, assets (object mapping filename to base64 data URLs, optional). Html should be a full webpage without <style> tags.",
+        }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      const parsed = JSON.parse(data.result);
+      setGenHtml(parsed.html || "");
+      setGenCss(parsed.css || "");
+      setAssets(parsed.assets || {});
+      writePreview(parsed.html, parsed.css);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+      setError("Generation failed.");
+    }
+  }
+
   async function downloadZip() {
     const zip = new JSZip();
-    const css = `
-/* Reset & base */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: "Inter", system-ui, sans-serif;
-  margin: 0;
-  background: #0a0a0f;
-  color: #f5f5f7;
-  line-height: 1.6;
-}
-
-/* Header */
-.site-header {
-  background: #0e0e15;
-  padding: 14px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.header-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.site-logo { height: 42px; }
-.site-logo-placeholder {
-  height: 42px; width: 42px;
-  background: #222; color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 6px; font-weight: 700;
-}
-.site-nav a {
-  margin-left: 20px;
-  color: #00ffcc;
-  text-decoration: none;
-  font-weight: 500;
-}
-.site-nav a:hover { color: #ff004c; }
-
-/* Hero */
-.site-hero {
-  text-align: center;
-  padding: 80px 20px;
-  background: linear-gradient(135deg,#0f0f18,#050507);
-}
-.site-hero h1 { font-size: 3rem; color: #ff004c; margin-bottom: 16px; }
-.site-hero .tag { font-size: 1.2rem; color: #ddd; margin-bottom: 24px; }
-.btn-cta {
-  display: inline-block;
-  padding: 12px 24px;
-  background: #00ff99;
-  color: #000;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: all 0.3s ease;
-}
-.btn-cta:hover { background: #ff004c; color: #fff; }
-
-/* Sections */
-.site-section {
-  max-width: 900px;
-  margin: 60px auto;
-  padding: 0 20px;
-}
-.site-section h2 { color: #00ffcc; margin-bottom: 16px; }
-
-/* Features */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-  gap: 20px;
-}
-.feature-card {
-  background: #161622;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.05);
-  text-align: center;
-  transition: transform 0.2s ease;
-}
-.feature-card:hover { transform: translateY(-4px); }
-
-/* Footer */
-.site-footer {
-  text-align: center;
-  padding: 30px 20px;
-  background: #0e0e15;
-  color: #999;
-  margin-top: 60px;
-  font-size: 0.9rem;
-}
-`;
-    zip.file("index.html", previewHTML);
+    const html = genHtml || buildFallbackHtml();
+    const css = genCss || defaultCss();
+    zip.file("index.html", html);
     zip.file("style.css", css);
-    if (logoDataUrl) {
+
+    if (assets && typeof assets === "object") {
+      for (const [name, dataUrl] of Object.entries(assets)) {
+        const bin = dataURLtoBlob(dataUrl);
+        zip.file(name, bin);
+      }
+    } else if (logoDataUrl) {
       const bin = dataURLtoBlob(logoDataUrl);
       zip.file("logo.png", bin);
     }
-    zip.file("README.md", `# ${siteTitle}\n\nGenerated by NightForge Pro (Mr Dev).\n\nOpen index.html to preview locally or deploy to Vercel/Netlify.\n`);
+
+    zip.file("README.md", `# ${siteTitle}\n\nGenerated with NightForge.\n`);
     const content = await zip.generateAsync({ type: "blob" });
-    saveBlobAs(content, `${siteTitle.replace(/\s+/g, "_")}.zip`);
+    saveBlob(content, `${siteTitle.replace(/\s+/g, "_")}.zip`);
+  }
+
+  function defaultCss() {
+    return `
+:root { --bg:#07070a; --panel:#0b0b10; --muted:#aaa; --accent:#ff004c; --neon:#00ff99; --text:#e9f7ee; }
+body { font-family: Inter, system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+.site-header{ background:var(--panel); padding:12px;}
+.site-hero{ padding:60px 20px; text-align:center; background:linear-gradient(180deg,#0f0f18,#050507);}
+.site-hero h1{ color:var(--accent);} .site-section{ max-width:900px; margin:32px auto; padding:0 20px;}
+.site-footer{ text-align:center; padding:20px; background:var(--panel); color:var(--muted);}
+`;
   }
 
   function dataURLtoBlob(dataurl) {
     const arr = dataurl.split(",");
-    const mime = arr[0].match(/:(.*?);/)[1];
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
@@ -216,8 +191,7 @@ body {
     return new Blob([u8arr], { type: mime });
   }
 
-  function saveBlobAs(blob, name) {
-    if (typeof window === "undefined") return;
+  function saveBlob(blob, name) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -232,139 +206,66 @@ body {
     <>
       <Navbar />
       <UnlockWrapper>
-        <main style={{ maxWidth: 1100, margin: "20px auto", padding: "20px" }}>
-          <h1 style={{ color: "var(--accent)" }}>🕸️ NightForge — Pro Web Builder</h1>
+        <main className="container section">
+          <h1 className="section-title">🕸️ NightForge Pro Web Builder</h1>
+          <section className="card step-panel">
+            <label>
+              Describe your site
+              <textarea className="input" rows={3} value={sitePrompt} onChange={(e) => setSitePrompt(e.target.value)} />
+            </label>
+            <label>
+              Site Title
+              <input className="input" value={siteTitle} onChange={(e) => setSiteTitle(e.target.value)} />
+            </label>
+            <label>
+              Tagline
+              <input className="input" value={tagline} onChange={(e) => setTagline(e.target.value)} />
+            </label>
+            <label>
+              About
+              <textarea className="input" rows={2} value={about} onChange={(e) => setAbout(e.target.value)} />
+            </label>
+            <label>
+              Features (comma separated)
+              <input className="input" value={features.join(", ")} onChange={(e) => setFeatures(e.target.value.split(",").map(s => s.trim()))} />
+            </label>
+            <label>
+              Nav Links (label:href, one per line)
+              <textarea
+                className="input"
+                rows={3}
+                value={navLinks.map(n => `${n.label}:${n.href}`).join("\n")}
+                onChange={(e) =>
+                  setNavLinks(
+                    e.target.value.split("\n").map(line => {
+                      const [label, href] = line.split(":");
+                      return { label: label?.trim() || "", href: href?.trim() || "#" };
+                    })
+                  )
+                }
+              />
+            </label>
+            <label>
+              Upload logo
+              <input type="file" accept="image/*" onChange={onLogoFile} />
+            </label>
 
-          <div className="builder-layout">
-            <div>
-              {/* Steps remain same */}
-              {step === 1 && (
-                <section className="step-panel">
-                  <h3>Step 1 — Site Info</h3>
-                  <label>
-                    Site Title
-                    <input value={siteTitle} onChange={(e) => setSiteTitle(e.target.value)} />
-                  </label>
-                  <label>
-                    Tagline
-                    <input value={tagline} onChange={(e) => setTagline(e.target.value)} />
-                  </label>
-                  <div style={{ marginTop: 12 }}>
-                    <button className="btn-primary" onClick={() => setStep(2)}>
-                      Next
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {step === 2 && (
-                <section className="step-panel">
-                  <h3>Step 2 — About & Features</h3>
-                  <label>
-                    About
-                    <textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={4}></textarea>
-                  </label>
-                  <label>
-                    Features (comma-separated)
-                    <input
-                      value={features.join(", ")}
-                      onChange={(e) =>
-                        setFeatures(e.target.value.split(",").map((s) => s.trim()))
-                      }
-                    />
-                  </label>
-                  <div style={{ marginTop: 12 }}>
-                    <button className="btn-ghost" onClick={() => setStep(1)}>
-                      Back
-                    </button>
-                    <button className="btn-primary" onClick={() => setStep(3)}>
-                      Next
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {step === 3 && (
-                <section className="step-panel">
-                  <h3>Step 3 — Navigation Links</h3>
-                  {navLinks.map((l, i) => (
-                    <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                      <input
-                        value={l.label}
-                        onChange={(e) => {
-                          const arr = [...navLinks];
-                          arr[i].label = e.target.value;
-                          setNavLinks(arr);
-                        }}
-                        placeholder="Label"
-                      />
-                      <input
-                        value={l.href}
-                        onChange={(e) => {
-                          const arr = [...navLinks];
-                          arr[i].href = e.target.value;
-                          setNavLinks(arr);
-                        }}
-                        placeholder="Href"
-                      />
-                    </div>
-                  ))}
-                  <div style={{ marginTop: 8 }}>
-                    <button onClick={() => setNavLinks([...navLinks, { label: "New", href: "#" }])}>
-                      + Add Link
-                    </button>
-                  </div>
-                  <div style={{ marginTop: 12 }}>
-                    <button className="btn-ghost" onClick={() => setStep(2)}>
-                      Back
-                    </button>
-                    <button className="btn-primary" onClick={() => setStep(4)}>
-                      Next
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {step === 4 && (
-                <section className="step-panel">
-                  <h3>Step 4 — Upload Logo</h3>
-                  <input type="file" accept="image/*" onChange={onLogoFile} />
-                  <div style={{ marginTop: 12 }}>
-                    <button className="btn-ghost" onClick={() => setStep(3)}>
-                      Back
-                    </button>
-                    <button className="btn-primary" onClick={() => setStep(5)}>
-                      Next
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {step === 5 && (
-                <section className="step-panel">
-                  <h3>Step 5 — Review & Download</h3>
-                  <p>Preview below. When ready, download a ZIP with index.html, style.css and assets.</p>
-                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    <button className="btn-ghost" onClick={() => setStep(4)}>
-                      Back
-                    </button>
-                    <button className="btn-primary" onClick={downloadZip}>
-                      📦 Download ZIP
-                    </button>
-                  </div>
-                </section>
-              )}
+            <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+              <button className="btn btn-primary" disabled={loading} onClick={generateSite}>
+                🚀 Generate
+              </button>
+              <button className="btn" onClick={downloadZip}>
+                📦 Download ZIP
+              </button>
             </div>
+            {loading && <p className="muted">Generating...</p>}
+            {error && <p className="muted" style={{ color: "salmon" }}>{error}</p>}
+          </section>
 
-            <aside>
-              <div style={{ position: "sticky", top: 20 }}>
-                <h4 style={{ marginTop: 0, color: "var(--neon)" }}>Live Preview</h4>
-                <div style={{ border: "1px solid var(--panel)", borderRadius: 8, overflow: "hidden" }}>
-                  <iframe title="preview" ref={iframeRef} style={{ width: "100%", height: 520, border: 0 }} />
-                </div>
-              </div>
-            </aside>
-          </div>
+          <aside className="card" style={{ marginTop: 16 }}>
+            <h4>Preview</h4>
+            <iframe ref={iframeRef} style={{ width: "100%", height: 500, border: 0 }} title="preview" />
+          </aside>
         </main>
       </UnlockWrapper>
       <Footer />
