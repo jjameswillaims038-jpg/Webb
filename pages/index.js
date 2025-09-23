@@ -81,118 +81,17 @@ export default function Home() {
               <p>Export your site or bot and launch instantly.</p>
             </div>
           </div>
-          <Link href="/tools" className="cta-btn">
-            🚀 Enter The Forge
-          </Link>
+          <Link href="/tools" className="cta-btn">🚀 Enter The Forge</Link>
         </section>
 
         {/* CTA */}
         <section className="cta">
           <h2>⚡ Ready to Unleash the Darkness?</h2>
           <p>Start forging tools now with Mr Dev’s NightForge.</p>
-          <Link href="/tools" className="cta-btn">
-            🔥 Begin Now
-          </Link>
+          <Link href="/tools" className="cta-btn">🔥 Begin Now</Link>
         </section>
       </main>
       <Footer />
-
-      <style jsx>{`
-        .home {
-          padding: 20px;
-          max-width: 1100px;
-          margin: 0 auto;
-        }
-        section {
-          margin-bottom: 60px;
-          text-align: center;
-        }
-        h1 {
-          font-size: 2.2rem;
-          margin-bottom: 12px;
-          color: var(--accent);
-        }
-        h2 {
-          font-size: 1.6rem;
-          margin-bottom: 16px;
-          color: var(--neon);
-        }
-        .hero p {
-          color: var(--muted);
-          margin-bottom: 20px;
-        }
-        .cta-btn {
-          display: inline-block;
-          background: #ff004c;
-          color: #fff;
-          padding: 12px 20px;
-          border-radius: 8px;
-          text-decoration: none;
-          font-weight: bold;
-        }
-        .grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 16px;
-        }
-        .card {
-          background: #0c0c12;
-          border: 1px solid #111;
-          border-radius: 10px;
-          padding: 20px;
-          text-align: left;
-        }
-        .card h3 {
-          margin: 0 0 8px;
-          color: var(--accent);
-        }
-        .card p {
-          color: var(--muted);
-          margin: 0;
-        }
-        .steps {
-          display: grid;
-          gap: 16px;
-        }
-        .step {
-          background: #0c0c12;
-          border: 1px solid #111;
-          padding: 16px;
-          border-radius: 8px;
-          text-align: left;
-        }
-        .step span {
-          display: inline-block;
-          background: var(--accent);
-          color: #000;
-          font-weight: bold;
-          padding: 4px 10px;
-          border-radius: 50%;
-          margin-bottom: 8px;
-        }
-        .cta {
-          background: linear-gradient(180deg, #0f0f18, #050507);
-          padding: 40px 20px;
-          border-radius: 12px;
-        }
-        /* Larger screens */
-        @media (min-width: 700px) {
-          .grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-        @media (min-width: 1000px) {
-          .grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-          .arsenal .grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-          .steps {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-      `}</style>
     </>
   );
 }
