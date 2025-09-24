@@ -106,6 +106,54 @@ body {
   box-shadow: 0 0 12px rgba(255, 0, 76, 0.5);
 }
 
+/* FORMS / INPUTS */
+.input,
+textarea.code-input,
+select.input {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid #222;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+.input:focus,
+textarea.code-input:focus,
+select.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(255, 0, 76, 0.6);
+  background: #111;
+}
+textarea.code-input {
+  min-height: 120px;
+  resize: vertical;
+  font-family: monospace;
+}
+
+/* Labels */
+label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--neon);
+  text-shadow: 0 0 6px rgba(0, 255, 153, 0.5);
+}
+
+/* COMMAND PAIRS (DevTools cleaner) */
+.command-pair {
+  margin-bottom: 12px;
+}
+.command-pair input {
+  margin-bottom: 8px;
+}
+
 /* BUTTONS */
 .btn {
   display: inline-block;
