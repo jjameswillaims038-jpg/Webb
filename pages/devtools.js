@@ -1,3 +1,4 @@
+// pages/DevTools.js
 import { useState } from "react";
 import JSZip from "jszip";
 import Navbar from "../components/Navbar";
@@ -31,12 +32,14 @@ export default function DevTools() {
         body: JSON.stringify({
           task: "Bot Builder",
           input: JSON.stringify({ botName, runtime, commands }),
-          instructions: "Generate clean code for a simple Telegram bot with the given runtime and commands.",
+          instructions: `Generate ${runtime} Telegram bot code with commands. Only output code, no explanations.`,
         }),
       });
+
       const data = await res.json();
-      setCodeOut(data.result);
+      setCodeOut(data.code || "// No code returned");
     } catch (e) {
+      console.error(e);
       setCodeOut("// Failed to generate code");
     }
     setLoading(false);
@@ -54,8 +57,9 @@ export default function DevTools() {
           instructions: changeReq,
         }),
       });
+
       const data = await res.json();
-      setCodeOut(data.result);
+      setCodeOut(data.code || "// Modification failed");
     } catch {
       setCodeOut("// Modification failed");
     }
@@ -64,8 +68,14 @@ export default function DevTools() {
 
   async function buildBotZip() {
     const zip = new JSZip();
-    zip.file("README.md", `# ${botName}\n\nGenerated with NightForge DevTools.\n`);
-    zip.file(runtime === "node" ? "bot.js" : "bot.py", codeOut || "// no code");
+    zip.file(
+      "README.md",
+      `# ${botName}\n\nGenerated with NightForge DevTools.\n`
+    );
+    zip.file(
+      runtime === "node" ? "bot.js" : "bot.py",
+      codeOut || "// no code"
+    );
     zip.file("commands.json", JSON.stringify(commands, null, 2));
     if (cloneFile) {
       zip.file(cloneFile.name, await cloneFile.arrayBuffer());
@@ -84,53 +94,110 @@ export default function DevTools() {
         <main className="container section">
           <h1 className="section-title">💀 NightForge DevTools</h1>
 
+          {/* Bot Builder */}
           <section className="card">
             <h3>🤖 Bot Builder</h3>
-            <label>Bot Name <input className="input" value={botName} onChange={(e) => setBotName(e.target.value)} /></label>
-            <label>Runtime
-              <select className="input" value={runtime} onChange={(e) => setRuntime(e.target.value)}>
+            <label>
+              Bot Name{" "}
+              <input
+                className="input"
+                value={botName}
+                onChange={(e) => setBotName(e.target.value)}
+              />
+            </label>
+            <label>
+              Runtime
+              <select
+                className="input"
+                value={runtime}
+                onChange={(e) => setRuntime(e.target.value)}
+              >
                 <option value="node">Node.js</option>
                 <option value="python">Python</option>
               </select>
             </label>
+
             <div>
               {commands.map((c, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                  <input className="input" value={c.cmd} onChange={(e) => {
-                    const arr = [...commands];
-                    arr[i].cmd = e.target.value;
-                    setCommands(arr);
-                  }} placeholder="/cmd" />
-                  <input className="input" value={c.reply} onChange={(e) => {
-                    const arr = [...commands];
-                    arr[i].reply = e.target.value;
-                    setCommands(arr);
-                  }} placeholder="Reply text" />
+                <div
+                  key={i}
+                  style={{ display: "flex", gap: 8, marginBottom: 8 }}
+                >
+                  <input
+                    className="input"
+                    value={c.cmd}
+                    onChange={(e) => {
+                      const arr = [...commands];
+                      arr[i].cmd = e.target.value;
+                      setCommands(arr);
+                    }}
+                    placeholder="/cmd"
+                  />
+                  <input
+                    className="input"
+                    value={c.reply}
+                    onChange={(e) => {
+                      const arr = [...commands];
+                      arr[i].reply = e.target.value;
+                      setCommands(arr);
+                    }}
+                    placeholder="Reply text"
+                  />
                 </div>
               ))}
-              <button className="btn" onClick={addCommand}>+ Add Command</button>
+              <button className="btn" onClick={addCommand}>
+                + Add Command
+              </button>
             </div>
-            <button className="btn btn-primary" onClick={generateBotCode} disabled={loading}>
-              Generate Bot Code
+            <button
+              className="btn btn-primary"
+              onClick={generateBotCode}
+              disabled={loading}
+            >
+              🚀 Generate Bot Code
             </button>
           </section>
 
+          {/* Code Modifier */}
           <section className="card">
             <h3>🛠 Code Modifier</h3>
-            <textarea className="code-input" rows={6} value={codeIn} onChange={(e) => setCodeIn(e.target.value)} />
-            <input className="input" placeholder="Describe change..." value={changeReq} onChange={(e) => setChangeReq(e.target.value)} />
-            <button className="btn btn-primary" onClick={applyModification} disabled={loading}>Apply Change</button>
+            <textarea
+              className="code-input"
+              rows={6}
+              value={codeIn}
+              onChange={(e) => setCodeIn(e.target.value)}
+            />
+            <input
+              className="input"
+              placeholder="Describe change..."
+              value={changeReq}
+              onChange={(e) => setChangeReq(e.target.value)}
+            />
+            <button
+              className="btn btn-primary"
+              onClick={applyModification}
+              disabled={loading}
+            >
+              🔧 Apply Change
+            </button>
             {codeOut && <pre className="code-block">{codeOut}</pre>}
           </section>
 
+          {/* Bot Cloner */}
           <section className="card">
-            <h3>📦 Bot Cloner</h3>
-            <input type="file" accept=".zip" onChange={e => {
-              setCloneFile(e.target.files[0]);
-              setCloneNote(`Uploaded: ${e.target.files[0].name}`);
-            }} />
+            <h3>📦 file zipper</h3>
+            <input
+              type="file"
+              accept=".zip"
+              onChange={(e) => {
+                setCloneFile(e.target.files[0]);
+                setCloneNote(`Uploaded: ${e.target.files[0].name}`);
+              }}
+            />
             <p className="muted">{cloneNote}</p>
-            <button className="btn btn-primary" onClick={buildBotZip}>Repackage ZIP</button>
+            <button className="btn btn-primary" onClick={buildBotZip}>
+              Repackage ZIP
+            </button>
           </section>
         </main>
       </UnlockWrapper>
