@@ -9,27 +9,14 @@ export default async function handler(req, res) {
   try {
     const { task, input, instructions } = req.body;
 
-    const HF_MODEL = "tiiuae/falcon-7b-instruct"; // better model than gpt2
+    const HF_MODEL = "gpt2"; // try "EleutherAI/gpt-neo-2.7B" for better quality
     const HF_TOKEN = process.env.HF_API_KEY;
 
     if (!HF_TOKEN) {
       return res.status(500).json({ error: "Hugging Face API key not set" });
     }
 
-    // Build the prompt to "force" structured output
-    const prompt = `
-Task: ${task}
-Input: ${input}
-Instructions: ${instructions}
-
-Respond ONLY in JSON with keys: "html", "css", "js".
-Example:
-{
-  "html": "<h1>Hello</h1>",
-  "css": "body{color:red}",
-  "js": "console.log('hi')"
-}
-`;
+    const prompt = `Task: ${task}\nInput: ${input}\nInstructions: ${instructions}\nOutput:`;
 
     const response = await fetch(
       `https://api-inference.huggingface.co/models/${HF_MODEL}`,
@@ -45,41 +32,19 @@ Example:
 
     const data = await response.json();
 
-    let resultText = "";
+    let text = "";
     if (Array.isArray(data)) {
-      resultText = data[0]?.generated_text || "";
+      text = data[0]?.generated_text || "";
     } else if (data.generated_text) {
-      resultText = data.generated_text;
+      text = data.generated_text;
     } else {
-      resultText = JSON.stringify(data);
+      text = JSON.stringify(data);
     }
 
-    // Try to extract JSON safely
-    let jsonMatch = resultText.match(/\{[\s\S]*\}/);
-    let cleanResult = {};
-
-    if (jsonMatch) {
-      try {
-        cleanResult = JSON.parse(jsonMatch[0]);
-      } catch (e) {
-        console.error("JSON parse error:", e);
-        cleanResult = {
-          html: `<h1>⚠️ AI Error</h1><p>Could not parse response.</p>`,
-          css: "body{font-family:sans-serif;color:red}",
-          js: "",
-        };
-      }
-    } else {
-      cleanResult = {
-        html: `<pre>${resultText}</pre>`,
-        css: "body{font-family:monospace;color:#0f0}",
-        js: "",
-      };
-    }
-
-    res.status(200).json(cleanResult);
+    // Normalize response so frontend always gets { code: "...code..." }
+    res.status(200).json({ code: text.trim() });
   } catch (err) {
-    console.error(err);
+    console.error("AI error:", err);
     res.status(500).json({ error: "AI generation failed" });
   }
 }
