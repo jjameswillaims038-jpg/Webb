@@ -16,10 +16,10 @@
     "react-dom": "18.2.0",
     "node-fetch": "^3.3.2",
     "node-html-parser": "^6.1.7",
-    "openai": "^4.0.0"             // ✅ AI SDK (used in /api/ai.js)
+    "openai": "^4.0.0"             
   },
   "devDependencies": {
-    "eslint": "8.44.0",            // ✅ Linting for clean code
+    "eslint": "8.44.0",            
     "eslint-config-next": "13.4.10"
   },
   "type": "module"
